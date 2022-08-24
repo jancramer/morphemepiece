@@ -1,12 +1,11 @@
-from operator import sub
-
-from numpy import append
+from vocab import Vocab
 
 
 class MorphemepieceTokenizer(object):
 
-    def __init__(self):
-        pass
+    def __init__(self,vocab):
+        self.vocab=vocab
+        
 
     def tokenize_word(self, word:str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=1000):
         if len(word)> max_chars:
@@ -58,19 +57,16 @@ class MorphemepieceTokenizer(object):
 
             while start <= end:
                 sub_str = word[start-1:end] 
-                print(sub_str)
                 #look for prefixes, if allowed
                 if "p" in allowed_next and end < word_len and sub_str in prefixes:
                     cur_substring = sub_str+frag_pat
                     allowed_next=allowed_next_rules['p']
-                    print(cur_substring)
                     break
 
                 #look for suffixes, if allowed
                 if "s" in allowed_next and start > 1 and sub_str in suffixes:
                     cur_substring = frag_pat+sub_str
                     allowed_next=allowed_next_rules['s']
-                    print(cur_substring)
                     break
                 
                 #look for complete words, if allowed
@@ -106,3 +102,63 @@ class MorphemepieceTokenizer(object):
             return unk_token
 
         return sub_tokens
+
+    def tokenize_word_bidirectional(self, word:str, vocab_split, unk_token, max_chars, allow_compounds=True):
+
+        forwards_list=self.tokenize_word(word, vocab_split=vocab_split,dir=1, allow_compounds=allow_compounds,unk_token=unk_token,max_chars=max_chars)
+        backwards_list= self.tokenize_word(word, vocab_split=vocab_split,dir=-1, allow_compounds=allow_compounds,unk_token=unk_token,max_chars=max_chars)
+
+        len_forward=len([token for token in forwards_list if token!="##"])
+        len_backward=len([token for token in backwards_list if token!="##"])
+        if len_backward < len_forward and len_backward >1:
+            return backwards_list
+        else:
+            return forwards_list
+
+    
+    #has to be implemented
+    def __process_vocab(vocab_split):
+        return vocab_split
+
+    def tokenize_word_lookup(self, word, vocab:Vocab, lookup, unk_token, max_chars):
+        vocab_split=vocab.vocab_split
+        vocab:list= self.__process_vocab(vocab_split)
+        
+        if word =="":
+            return 0
+            
+        if word in vocab:
+            id = vocab.index(word)
+            #names(id)<-word
+            return id
+        #nl<-names(lookup)
+        nl=lookup
+        token_list:list
+        if word in nl:
+            breakdown:str=lookup[word]
+            token_list= breakdown.split(" ")
+        else:
+            token_list=self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
+        ids = [i for i in range(len(vocab)) if vocab[i] in token_list]
+        return ids
+
+    def tokenize_single_string(self):
+        pass
+
+    def __space_tokenizer(self, words:str):
+        return words.split(" ")
+
+    def tokenize(self, text:str, vocab:Vocab,lookup,unk_token="[UNK]", max_chars=100):
+        is_cased=vocab.is_cased
+         
+        if is_cased:
+            text=text.lower()
+        
+        word_list=self.__space_tokenizer(text)
+
+        tokens=[self.tokenize_single_string(word, vocab, lookup, unk_token, max_chars) for word in word_list]
+        #muss noch vervollständigt werden
+        empty_int =0
+        tokens[len()]
+
+        return tokens
