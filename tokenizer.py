@@ -47,16 +47,16 @@ class MorphemepieceTokenizer(object):
         keep_going=True
 
         while keep_going:
-        
+            
             if dir==1:
                 end = word_len
             else: 
                 start=1
             
             cur_substring= ""
-
             while start <= end:
                 sub_str = word[start-1:end] 
+                print(sub_str)
                 #look for prefixes, if allowed
                 if "p" in allowed_next and end < word_len and sub_str in prefixes:
                     cur_substring = sub_str+frag_pat
@@ -64,28 +64,26 @@ class MorphemepieceTokenizer(object):
                     break
 
                 #look for suffixes, if allowed
-                if "s" in allowed_next and start > 1 and sub_str in suffixes:
+                elif "s" in allowed_next and start > 1 and sub_str in suffixes:
                     cur_substring = frag_pat+sub_str
                     allowed_next=allowed_next_rules['s']
                     break
                 
                 #look for complete words, if allowed
-                if ("w" in allowed_next or "#" in allowed_next) and sub_str in words:
+                elif ("w" in allowed_next or "#" in allowed_next) and sub_str in words:
                     cur_substring= sub_str
                     if "#" in allowed_next:
                         if dir == 1:
                             sub_tokens.append(frag_pat)
                         else:
                             sub_tokens.insert(0,frag_pat)
-
-                    allowed_next=allowed_next_rules['w']
+                    allowed_next=allowed_next_rules['w']                   
                     break
                 if dir== 1:
                     end=end -1
                 else: 
                     start= start+1
-                
-            if cur_substring[0] == "":
+            if cur_substring == "":
                 is_bad=True
                 break
             
@@ -120,7 +118,7 @@ class MorphemepieceTokenizer(object):
     def __process_vocab(vocab_split):
         return vocab_split
 
-    def tokenize_word_lookup(self, word, vocab:Vocab, lookup, unk_token, max_chars):
+    def tokenize_word_lookup(self, word, vocab:Vocab, lookup:dict, unk_token, max_chars):
         vocab_split=vocab.vocab_split
         vocab:list= self.__process_vocab(vocab_split)
         
@@ -130,11 +128,9 @@ class MorphemepieceTokenizer(object):
         if word in vocab:
             id = vocab.index(word)
             #names(id)<-word
-            return id
-        #nl<-names(lookup)
-        nl=lookup
+            return id  
         token_list:list
-        if word in nl:
+        if word in lookup.keys():
             breakdown:str=lookup[word]
             token_list= breakdown.split(" ")
         else:
@@ -142,8 +138,9 @@ class MorphemepieceTokenizer(object):
         ids = [i for i in range(len(vocab)) if vocab[i] in token_list]
         return ids
 
-    def tokenize_single_string(self):
-        pass
+   # def tokenize_single_string(self, words, vocab, lookup, unk_token, max_chars):
+        #apply methods to all words
+     #   return [self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in words]
 
     def __space_tokenizer(self, words:str):
         return words.split(" ")
@@ -156,9 +153,5 @@ class MorphemepieceTokenizer(object):
         
         word_list=self.__space_tokenizer(text)
 
-        tokens=[self.tokenize_single_string(word, vocab, lookup, unk_token, max_chars) for word in word_list]
-        #muss noch vervollständigt werden
-        empty_int =0
-        tokens[len()]
-
+        tokens=[self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
         return tokens
