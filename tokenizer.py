@@ -1,3 +1,4 @@
+import re
 from vocab import Vocab
 
 
@@ -30,11 +31,12 @@ class MorphemepieceTokenizer(object):
 
         allowed_next_rules={}
         allowed_next=[]
+        #set of rules for forward search
         if dir==1:
             allowed_next_rules={
                 'p': ["p","w","s"],
                 'w': ["s", word_allowed],
-                's': "p"
+                's': "s"
             }
             allowed_next=["p","w"]
         else:
@@ -113,9 +115,6 @@ class MorphemepieceTokenizer(object):
             return forwards_list
 
     
-    #has to be implemented
-    #def __process_vocab(vocab_split):
-     #   return vocab_split
 
     def tokenize_word_lookup(self, word:str, vocab:Vocab, lookup:dict, unk_token, max_chars):
         vocab_split=vocab.vocab_split
@@ -126,8 +125,6 @@ class MorphemepieceTokenizer(object):
             return 0
             
         if word in vocabulary:
-            #id = vocabulary.index(word)
-            #names(id)<-word
             return [word]  
         token_list:list
         if word in lookup.keys():
@@ -135,23 +132,21 @@ class MorphemepieceTokenizer(object):
             token_list= breakdown.split(" ")
         else:
             token_list=self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
-        #ids = [i for i in range(len(vocabulary)) if vocabulary[i] in token_list]
+        
         return token_list
 
-   # def tokenize_single_string(self, words, vocab, lookup, unk_token, max_chars):
-        #apply methods to all words
-     #   return [self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in words]
 
     def __space_tokenizer(self, words:str):
-        return words.split(" ")
+        return re.findall(r"[\w']+|[.,!?;]", words)
 
-    def tokenize(self, text:str, vocab:Vocab,lookup,unk_token="[UNK]", max_chars=100):
+    def tokenize(self, text:str, vocab:Vocab ,lookup,unk_token="[UNK]", max_chars=100):
         is_cased=vocab.is_cased
          
         if is_cased:
             text=text.lower()
         
         word_list=self.__space_tokenizer(text)
-
+        
         tokens=[self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
+        #flatten the list
         return [token for tokens_word in tokens for token in tokens_word]
