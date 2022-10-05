@@ -7,7 +7,7 @@ class MorphemepieceTokenizer(object):
         self.vocab=vocab
         
 
-    def tokenize_word(self, word:str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=1000):
+    def tokenize_word(self, word:str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=100):
         if len(word)> max_chars:
             return unk_token
         frag_pat="##"
@@ -56,7 +56,6 @@ class MorphemepieceTokenizer(object):
             cur_substring= ""
             while start <= end:
                 sub_str = word[start-1:end] 
-                print(sub_str)
                 #look for prefixes, if allowed
                 if "p" in allowed_next and end < word_len and sub_str in prefixes:
                     cur_substring = sub_str+frag_pat
@@ -115,28 +114,29 @@ class MorphemepieceTokenizer(object):
 
     
     #has to be implemented
-    def __process_vocab(vocab_split):
-        return vocab_split
+    #def __process_vocab(vocab_split):
+     #   return vocab_split
 
-    def tokenize_word_lookup(self, word, vocab:Vocab, lookup:dict, unk_token, max_chars):
+    def tokenize_word_lookup(self, word:str, vocab:Vocab, lookup:dict, unk_token, max_chars):
         vocab_split=vocab.vocab_split
-        vocab:list= self.__process_vocab(vocab_split)
+        #check if it is in raw vocabulary
+        vocabulary=vocab.vocabulary
         
         if word =="":
             return 0
             
-        if word in vocab:
-            id = vocab.index(word)
+        if word in vocabulary:
+            #id = vocabulary.index(word)
             #names(id)<-word
-            return id  
+            return [word]  
         token_list:list
         if word in lookup.keys():
             breakdown:str=lookup[word]
             token_list= breakdown.split(" ")
         else:
             token_list=self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
-        ids = [i for i in range(len(vocab)) if vocab[i] in token_list]
-        return ids
+        #ids = [i for i in range(len(vocabulary)) if vocabulary[i] in token_list]
+        return token_list
 
    # def tokenize_single_string(self, words, vocab, lookup, unk_token, max_chars):
         #apply methods to all words
@@ -154,4 +154,4 @@ class MorphemepieceTokenizer(object):
         word_list=self.__space_tokenizer(text)
 
         tokens=[self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
-        return tokens
+        return [token for tokens_word in tokens for token in tokens_word]
