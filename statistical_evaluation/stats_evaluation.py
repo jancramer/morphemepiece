@@ -53,8 +53,8 @@ def report_token_stats(morphemepiece, bert):
 
     overlapping = word_breakdowns_morphempiece.intersection(word_breakdowns_bert)
 
-    print("Of the %d morpehempiece word tokenizations used, %d also occur in BERT. That is a ratio of %.3f" % (len(word_breakdowns_morphempiece), len(overlapping), len(overlapping)/ len(word_breakdowns_morphempiece)))
-    print("Of the %d bert word tokenizations used, %d also occur in Morphemepiece. That is a ratio of %.3f" % (
+    print("Of the %d morphemepiece word tokenizations used, %d also occur in BERT. That is a ratio of %.3f" % (len(word_breakdowns_morphempiece), len(overlapping), len(overlapping)/ len(word_breakdowns_morphempiece)))
+    print("Of the %d bert word tokenizations used, %d also occur in morphemepiece. That is a ratio of %.3f" % (
     len(word_breakdowns_bert), len(overlapping), len(overlapping) / len(word_breakdowns_bert)))
 
 
