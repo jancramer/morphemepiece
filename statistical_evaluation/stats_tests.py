@@ -16,7 +16,7 @@ vocab_split = {'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab = Vocab(vocabulary, vocab_split, True)
 
 # Erstellen des Tokenizers
-morpheme = MorphemepieceTokenizer(vocab)
+morpheme = MorphemepieceTokenizer(vocab,lookup)
 
 word = "the notebook charger is there."
 tokenized = morpheme.tokenize(word, vocab=vocab, lookup=lookup, unk_token="[UNK]", max_chars=200)

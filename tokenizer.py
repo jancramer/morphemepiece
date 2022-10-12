@@ -1,11 +1,14 @@
+from cgitb import lookup
+from lib2to3.pgen2 import token
 import re
 from vocab import Vocab
 
 
 class MorphemepieceTokenizer(object):
 
-    def __init__(self,vocab):
+    def __init__(self,vocab:Vocab, lookup:dict):
         self.vocab=vocab
+        self.lookup=lookup
         
 
     def tokenize_word(self, word:str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=100):
@@ -21,7 +24,6 @@ class MorphemepieceTokenizer(object):
         sub_tokens=[]
         word_len=len(word)
         end=word_len
-        #verbesserungsfähig
         compound = False
 
         word_allowed = "XXX"
@@ -137,7 +139,7 @@ class MorphemepieceTokenizer(object):
 
 
     def __space_tokenizer(self, words:str):
-        return re.findall(r"[\w']+|[.,!?;]", words)
+        return re.findall(r"[\w']+|[.,!?;-]", words)
 
     def tokenize(self, text:str, vocab:Vocab ,lookup,unk_token="[UNK]", max_chars=100):
         is_cased=vocab.is_cased
@@ -150,3 +152,43 @@ class MorphemepieceTokenizer(object):
         tokens=[self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
         #flatten the list
         return [token for tokens_word in tokens for token in tokens_word]
+
+    #preparation for huggingface
+    
+    def get_added_vocab(self):
+        vocab_dic={}
+        vocab_tmp=self.vocab.vocabulary
+        for i in range(len(vocab_tmp)):
+            vocab_dic[vocab_tmp[i]]=i+1
+        return vocab_dic
+
+    def _convert_token_to_id(self, token:str):
+        return self.vocab.vocabulary.index(token)+1
+
+    def convert_tokens_to_id(self, tokens:list):
+        return [self._convert_token_to_id(token) for token in tokens]
+
+    def _convert_id_to_token(self, id):
+        return self.vocab.vocabulary[id-1]
+
+    def convert_ids_to_token(self, ids:list):
+        return [self._convert_id_to_token(id) for id in ids]
+
+    def convert_tokens_to_string(self, tokens:list):
+        concatenat_compounds=tokens
+        for token in concatenat_compounds:
+                if token=='##':
+                    token_id=concatenat_compounds.index(token)
+                    first=token_id-1
+                    second=token_id+1
+                    concatenat_compounds.remove(token)
+                    concatenat_compounds[first:second]=["".join(concatenat_compounds[first:second])]
+        out_string= " ".join(concatenat_compounds).replace(" ##","").replace("## ","").strip()
+        return out_string
+
+    def decode(self, ids:list):
+        return self.convert_tokens_to_string(self.convert_ids_to_token(ids))
+
+    def encode(self, text:str ):
+        tokens=self.tokenize(text,self.vocab,self.lookup)
+        return self.convert_tokens_to_id(tokens)

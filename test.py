@@ -13,6 +13,13 @@ vocab_split={  'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab=Vocab(vocabulary,vocab_split, True)
 
 #Erstellen des Tokenizers
-tokenizer=MorphemepieceTokenizer(vocab)
-test_string="When you create FIAT backed cryptocurrency using our tokenizer, the respective logic of the backing currency is embedded in the Smart contract automatically"
-print(tokenizer.tokenize(test_string,vocab=vocab,lookup=lookup, unk_token="[UNK]", max_chars=200 ))
+tokenizer=MorphemepieceTokenizer(vocab,lookup)
+test_string="we charge the prenotebooks"
+tokenized_string=tokenizer.tokenize(test_string,vocab=vocab,lookup=lookup, unk_token="[UNK]", max_chars=200 )
+ids=[]
+for i in range(len(tokenized_string)):
+    ids.append(tokenizer._convert_token_to_id(tokenized_string[i]))
+print(tokenizer.decode(ids))
+print(tokenizer.encode(test_string))
+print(tokenized_string)
+print(tokenizer.convert_tokens_to_string(tokenized_string))
