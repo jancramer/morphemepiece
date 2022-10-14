@@ -19,7 +19,7 @@ def main():
     vocab = Vocab(vocabulary, vocab_split, True)
 
     # Erstellen des Tokenizers
-    morpheme = MorphemepieceTokenizer(vocab)
+    morpheme = MorphemepieceTokenizer(vocab, lookup)
 
     bert = AutoTokenizer.from_pretrained("bert-base-uncased")
 

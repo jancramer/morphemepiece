@@ -1,9 +1,10 @@
-from sys import prefix
 from tokenizer import MorphemepieceTokenizer
 from vocab import Vocab
 import pandas as pd
+import pytest
+from transformers import BatchEncoding
 
-#vorbereiten des Vokabulars und des Lookup-Tables
+#importing the data
 vocabulary=pd.read_csv("./data/vocabulary.csv")["x"].to_list()
 lookup=pd.read_csv("./data/lookup.csv").set_index("y").to_dict()["x"]
 prefixes=pd.read_csv("./data/prefixes.csv")["x"].to_list()
@@ -12,14 +13,35 @@ suffixes= pd.read_csv("./data/suffixes.csv")["x"].to_list()
 vocab_split={  'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab=Vocab(vocabulary,vocab_split, True)
 
-#Erstellen des Tokenizers
-tokenizer=MorphemepieceTokenizer(vocab,lookup)
-test_string="we charge the prenotebooks"
-tokenized_string=tokenizer.tokenize(test_string,vocab=vocab,lookup=lookup, unk_token="[UNK]", max_chars=200 )
-ids=[]
-for i in range(len(tokenized_string)):
-    ids.append(tokenizer._convert_token_to_id(tokenized_string[i]))
-print(tokenizer.decode(ids))
-print(tokenizer.encode(test_string))
-print(tokenized_string)
-print(tokenizer.convert_tokens_to_string(tokenized_string))
+#creating the tokenizer
+tokenizer=MorphemepieceTokenizer(vocab=vocab, lookup=lookup)
+def test_call():
+    sentence="i use this sentence to check if everything works fine"
+    expected= BatchEncoding(data={'overflowing_tokens': [5449, 3093, 6919, 3025, 4421, 7162, 4035, 7155], 
+                            'num_truncated_tokens': 8, 
+                            'input_ids': [3034, 3118, 12515, 10862, 3056], 
+                            'token_type_ids': [0, 0, 0, 0, 0], 
+                            'attention_mask': [1, 1, 1, 1, 1]})
+    assert tokenizer.__call__(sentence,truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab, lookup=lookup)==expected
+
+
+def test_tokenizer():
+    
+    sentence="it is totally normal to be indistinguishable"
+    expected=['it', 'is', 'total', '##ly', 'normal', 'to', 'be', 'in##', 'distinguish', '##able']
+    assert tokenizer.tokenize(sentence, vocab, lookup)==expected
+
+    sentence="let's test some compounds and puntuation here in this fine-grained testcase!?"
+    expected= ['let', "##'", '##s', 'test', 'some', 'compound', '##s', 'and', 'punt', '##ua', '##tion', 'here', 'in', 'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case','!','?']
+    assert tokenizer.tokenize(sentence, vocab, lookup)==expected
+
+
+def test_relation_between_tokens_and_ids():
+    sentence="this is a random sentence to test the connection with the last word cosh"
+    tokenized_string=tokenizer.tokenize(sentence, vocab, lookup)
+    ids= [12515, 3059, 3026, 10282, 10862, 3056, 11677, 3052, 5847, 4040, 12530, 3052, 8464, 7257, 30000]
+    assert tokenizer.convert_ids_to_tokens(ids)==tokenized_string    
+    assert tokenizer.convert_tokens_to_ids(tokenized_string)==ids
+
+    assert tokenizer.decode(ids)==sentence
+    assert tokenizer.encode(sentence)==ids

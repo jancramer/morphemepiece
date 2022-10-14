@@ -1,16 +1,77 @@
-from cgitb import lookup
-from lib2to3.pgen2 import token
 import re
+from typing import Any, Dict, List, Union, Optional
 from vocab import Vocab
+from transformers import PreTrainedTokenizer, BatchEncoding
+from transformers.utils import PaddingStrategy, TensorType
+from transformers.tokenization_utils_base import TruncationStrategy 
 
 
-class MorphemepieceTokenizer(object):
 
-    def __init__(self,vocab:Vocab, lookup:dict):
+class MorphemepieceTokenizer(PreTrainedTokenizer):
+    vocab_files_names: Dict[str, str] 
+    pretrained_vocab_files_map: Dict[str, Dict[str, str]]
+    max_model_input_sizes: Dict[str, Optional[int]]
+    pretrained_init_configuration: Dict[str, Dict[str, Any]]
+    model_input_names: List[str]
+    padding_side: str
+    truncation_side: str
+
+    def __init__(self, 
+                vocab:Vocab, 
+                lookup:Dict[str, List[str]], 
+                do_lower_case=True,
+                do_basic_tokenize=True,
+                never_split=None,
+                unk_token="[UNK]",
+                sep_token="[SEP]",
+                pad_token="[PAD]",
+                cls_token="[CLS]",
+                mask_token="[MASK]",
+                tokenize_chinese_chars=True,
+                strip_accents=None,
+                **kwargs):
+        
+        super().__init__(
+            do_lower_case=do_lower_case,
+            do_basic_tokenize=do_basic_tokenize,
+            never_split=never_split,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            pad_token=pad_token,
+            cls_token=cls_token,
+            mask_token=mask_token,
+            tokenize_chinese_chars=tokenize_chinese_chars,
+            strip_accents=strip_accents,
+            **kwargs)
+
         self.vocab=vocab
         self.lookup=lookup
-        
-
+    
+    """
+    def __call__(self,
+                text: Union[str, List[str], List[List[str]]],
+                text_pair: Optional[Union[str, List[str], List[List[str]]]] = None, 
+                add_special_tokens: bool = True, 
+                padding: Union[bool, str, PaddingStrategy] = False, 
+                truncation: Union[bool, str, TruncationStrategy] = False, 
+                max_length: Optional[int] = None, stride: int = 0, 
+                is_split_into_words: bool = False, 
+                pad_to_multiple_of: Optional[int] = None, 
+                return_tensors: Optional[Union[str, TensorType]] = None, 
+                return_token_type_ids: Optional[bool] = None,
+                return_attention_mask: Optional[bool] = None,
+                return_overflowing_tokens: bool = False, 
+                return_special_tokens_mask: bool = False, 
+                return_offsets_mapping: bool = False, 
+                return_length: bool = False, 
+                verbose: bool = True, **kwargs) -> BatchEncoding:
+        input_ids=self.encode(text)
+        token_type_ids=[]
+        attention_mask=[]
+        overflowing_tokens=[]
+        data={'input_ids': input_ids,'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
+        return BatchEncoding(data=data)
+    """
     def tokenize_word(self, word:str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=100):
         if len(word)> max_chars:
             return unk_token
@@ -141,9 +202,9 @@ class MorphemepieceTokenizer(object):
     def __space_tokenizer(self, words:str):
         return re.findall(r"[\w']+|[.,!?;-]", words)
 
-    def tokenize(self, text:str, vocab:Vocab ,lookup,unk_token="[UNK]", max_chars=100):
+    def tokenize(self, text:str, vocab:Vocab,lookup,unk_token="[UNK]", max_chars=100):
         is_cased=vocab.is_cased
-         
+        
         if is_cased:
             text=text.lower()
         
@@ -165,13 +226,13 @@ class MorphemepieceTokenizer(object):
     def _convert_token_to_id(self, token:str):
         return self.vocab.vocabulary.index(token)+1
 
-    def convert_tokens_to_id(self, tokens:list):
+    def convert_tokens_to_ids(self, tokens:list):
         return [self._convert_token_to_id(token) for token in tokens]
 
     def _convert_id_to_token(self, id):
         return self.vocab.vocabulary[id-1]
 
-    def convert_ids_to_token(self, ids:list):
+    def convert_ids_to_tokens(self, ids:list):
         return [self._convert_id_to_token(id) for id in ids]
 
     def convert_tokens_to_string(self, tokens:list):
@@ -187,8 +248,12 @@ class MorphemepieceTokenizer(object):
         return out_string
 
     def decode(self, ids:list):
-        return self.convert_tokens_to_string(self.convert_ids_to_token(ids))
+        return self.convert_tokens_to_string(self.convert_ids_to_tokens(ids))
+
+    def batch_decode(self, sequences: Union[List[int], List[List[int]], "np.ndarray", "torch.Tensor", "tf.Tensor"], skip_special_tokens: bool = False, clean_up_tokenization_spaces: bool = True, **kwargs) -> List[str]:
+        return [self.decode(sentence) for sentence in sequences]
 
     def encode(self, text:str ):
         tokens=self.tokenize(text,self.vocab,self.lookup)
-        return self.convert_tokens_to_id(tokens)
+        return self.convert_tokens_to_ids(tokens)
+    
