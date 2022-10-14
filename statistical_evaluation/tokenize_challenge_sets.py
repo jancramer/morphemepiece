@@ -30,7 +30,7 @@ def main():
     df['bert'] = df['text'].map(lambda x: " ".join(bert.tokenize(x)))
 
     filename = dt.now().strftime("%Y%m%d_%H%M_tokenized.csv")
-    df.to_csv("tokenized_datasets/"+filename)
+    df.to_csv("tokenized_datasets/" + filename)
 
 
 if __name__ == '__main__':

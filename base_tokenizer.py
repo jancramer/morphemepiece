@@ -54,13 +54,13 @@ class BaseTokenizer:
         return self._tokenizer.get_vocab_size(with_added_tokens=with_added_tokens)
 
     def enable_padding(
-        self,
-        direction: Optional[str] = "right",
-        pad_to_multiple_of: Optional[int] = None,
-        pad_id: Optional[int] = 0,
-        pad_type_id: Optional[int] = 0,
-        pad_token: Optional[str] = "[PAD]",
-        length: Optional[int] = None,
+            self,
+            direction: Optional[str] = "right",
+            pad_to_multiple_of: Optional[int] = None,
+            pad_id: Optional[int] = 0,
+            pad_type_id: Optional[int] = 0,
+            pad_token: Optional[str] = "[PAD]",
+            length: Optional[int] = None,
     ):
         """Change the padding strategy
 
@@ -110,7 +110,7 @@ class BaseTokenizer:
         return self._tokenizer.padding
 
     def enable_truncation(
-        self, max_length: int, stride: Optional[int] = 0, strategy: Optional[str] = "longest_first"
+            self, max_length: int, stride: Optional[int] = 0, strategy: Optional[str] = "longest_first"
     ):
         """Change the truncation options
 
@@ -183,11 +183,11 @@ class BaseTokenizer:
         return self._tokenizer.normalize(sequence)
 
     def encode(
-        self,
-        sequence: InputSequence,
-        pair: Optional[InputSequence] = None,
-        is_pretokenized: bool = False,
-        add_special_tokens: bool = True,
+            self,
+            sequence: InputSequence,
+            pair: Optional[InputSequence] = None,
+            is_pretokenized: bool = False,
+            add_special_tokens: bool = True,
     ) -> Encoding:
         """Encode the given sequence and pair. This method can process raw text sequences as well
         as already pre-tokenized sequences.
@@ -216,10 +216,10 @@ class BaseTokenizer:
         return self._tokenizer.encode(sequence, pair, is_pretokenized, add_special_tokens)
 
     def encode_batch(
-        self,
-        inputs: List[EncodeInput],
-        is_pretokenized: bool = False,
-        add_special_tokens: bool = True,
+            self,
+            inputs: List[EncodeInput],
+            is_pretokenized: bool = False,
+            add_special_tokens: bool = True,
     ) -> List[Encoding]:
         """Encode the given inputs. This method accept both raw text sequences as well as already
         pre-tokenized sequences.
@@ -271,7 +271,7 @@ class BaseTokenizer:
         return self._tokenizer.decode(ids, skip_special_tokens=skip_special_tokens)
 
     def decode_batch(
-        self, sequences: List[List[int]], skip_special_tokens: Optional[bool] = True
+            self, sequences: List[List[int]], skip_special_tokens: Optional[bool] = True
     ) -> str:
         """Decode the list of sequences to a list of string sequences
 
@@ -348,7 +348,7 @@ class BaseTokenizer:
         return self._tokenizer.to_str(pretty)
 
     def post_process(
-        self, encoding: Encoding, pair: Optional[Encoding] = None, add_special_tokens: bool = True
+            self, encoding: Encoding, pair: Optional[Encoding] = None, add_special_tokens: bool = True
     ) -> Encoding:
         """Apply all the post-processing steps to the given encodings.
 

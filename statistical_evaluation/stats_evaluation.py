@@ -53,9 +53,10 @@ def report_token_stats(morphemepiece, bert):
 
     overlapping = word_breakdowns_morphempiece.intersection(word_breakdowns_bert)
 
-    print("Of the %d morphemepiece word tokenizations used, %d also occur in BERT. That is a ratio of %.3f" % (len(word_breakdowns_morphempiece), len(overlapping), len(overlapping)/ len(word_breakdowns_morphempiece)))
+    print("Of the %d morphemepiece word tokenizations used, %d also occur in BERT. That is a ratio of %.3f" % (
+    len(word_breakdowns_morphempiece), len(overlapping), len(overlapping) / len(word_breakdowns_morphempiece)))
     print("Of the %d bert word tokenizations used, %d also occur in morphemepiece. That is a ratio of %.3f" % (
-    len(word_breakdowns_bert), len(overlapping), len(overlapping) / len(word_breakdowns_bert)))
+        len(word_breakdowns_bert), len(overlapping), len(overlapping) / len(word_breakdowns_bert)))
 
 
 def report_tokenizer_stats(max_count, df, tokenizer_name):
@@ -100,6 +101,7 @@ def report_tokenizer_stats(max_count, df, tokenizer_name):
         tokenizer_name, complex_word_breakdown_string_counter.most_common(max_count)))
 
     return set(itertools.chain.from_iterable(word_breakdown_strings))
+
 
 def compute_token_length(t: str):
     if t.startswith("#") or t.endswith("#"):

@@ -4,9 +4,6 @@ from statistical_evaluation.stats_evaluation import word_boundary_mask, extract_
 from vocab import Vocab
 from tokenizer import MorphemepieceTokenizer
 
-
-
-
 vocabulary = pd.read_csv("../data/vocabulary.csv")["x"].to_list()
 lookup = pd.read_csv("../data/lookup.csv").set_index("y").to_dict()["x"]
 prefixes = pd.read_csv("../data/prefixes.csv")["x"].to_list()
@@ -16,7 +13,7 @@ vocab_split = {'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab = Vocab(vocabulary, vocab_split, True)
 
 # Erstellen des Tokenizers
-morpheme = MorphemepieceTokenizer(vocab,lookup)
+morpheme = MorphemepieceTokenizer(vocab, lookup)
 
 word = "the notebook charger is there."
 tokenized = morpheme.tokenize(word, vocab=vocab, lookup=lookup, unk_token="[UNK]", max_chars=200)
