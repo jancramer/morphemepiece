@@ -47,6 +47,15 @@ def test_special_tokens_in_sequence():
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
 
+def test_special_tokens_from_vocab():
+    # TODO: should not give an exception and the asserts should point to respective stable ids of these tokens
+
+    assert tokenizer.sep_token_id == -1
+    assert tokenizer.mask_token_id == -1
+    assert tokenizer.pad_token_id == -1
+    assert tokenizer.cls_token_id == -1
+
+
 def test_relation_between_tokens_and_ids():
     sentence = "this is a random sentence to test the connection with the last word cosh"
     tokenized_string = tokenizer.tokenize(sentence, vocab, lookup)
