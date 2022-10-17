@@ -39,6 +39,14 @@ def test_tokenizer():
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
 
+def test_special_tokens_in_sequence():
+    expected = ['[CLS]', 'hope', '##ful', '##ly', 'this', '[MASK]', 'work', '##s', 'as', 'intend', '##ed', 'to', 'get',
+                '[MASK]', 'inform', '##ation', '[PAD]', '[PAD]']
+    sentence = f"{tokenizer.cls_token} hopefully this {tokenizer.mask_token} works as intended to get {tokenizer.mask_token} information {tokenizer.pad_token} {tokenizer.pad_token}"
+
+    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+
+
 def test_relation_between_tokens_and_ids():
     sentence = "this is a random sentence to test the connection with the last word cosh"
     tokenized_string = tokenizer.tokenize(sentence, vocab, lookup)
