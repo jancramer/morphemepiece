@@ -48,6 +48,12 @@ def test_tokenize_irregular_plural():
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
 
+def test_unknown_token():
+    sentence = "longfakewordxzz"
+    expected = ['[UNK]']
+    assert tokenizer.tokenize(sentence, vocab, lookup, max_chars=7) == expected
+
+
 def test_decode_irregular_plural():
     tokens = [3240, 4035]
     expected = "foxes"
