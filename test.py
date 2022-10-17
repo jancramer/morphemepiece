@@ -65,6 +65,12 @@ def test_compound():
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
 
+def test_unarcher():
+    sentence = "unarcher"
+    expected = ["un##", "archer"]
+    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+
+
 def test_special_tokens_in_sequence():
     expected = ['[CLS]', 'hope', '##ful', '##ly', 'this', '[MASK]', 'work', '##s', 'as', 'intend', '##ed', 'to', 'get',
                 '[MASK]', 'inform', '##ation', '[PAD]', '[PAD]']
