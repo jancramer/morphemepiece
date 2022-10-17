@@ -53,6 +53,11 @@ def test_decode_irregular_plural():
     expected = "foxes"
     assert tokenizer.decode(tokens) == expected
 
+def test_compound():
+    sentence = "chairball"
+    expected = ['chair', '##', 'ball']
+    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+
 
 def test_special_tokens_in_sequence():
     expected = ['[CLS]', 'hope', '##ful', '##ly', 'this', '[MASK]', 'work', '##s', 'as', 'intend', '##ed', 'to', 'get',
