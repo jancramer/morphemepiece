@@ -38,6 +38,21 @@ def test_tokenizer():
                 'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case', '!', '?']
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
+def test_tokenize_irregular_plural():
+    sentence = "foxes"
+    expected = ['fox', '##s']
+    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+
+    sentence = "running"
+    expected = ['run', '##ing']
+    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+
+
+def test_decode_irregular_plural():
+    tokens = [3240, 4035]
+    expected = "foxes"
+    assert tokenizer.decode(tokens) == expected
+
 
 def test_special_tokens_in_sequence():
     expected = ['[CLS]', 'hope', '##ful', '##ly', 'this', '[MASK]', 'work', '##s', 'as', 'intend', '##ed', 'to', 'get',
@@ -46,6 +61,17 @@ def test_special_tokens_in_sequence():
 
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
+
+def test_empty_string():
+    expected = BatchEncoding(data={'overflowing_tokens': [],
+                        'num_truncated_tokens': -5,
+                        'input_ids': [],
+                        'token_type_ids': [],
+                        'attention_mask': []})
+    sentence = ""
+
+    assert tokenizer(sentence, truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab,
+                         lookup=lookup) == expected
 
 def test_special_tokens_from_vocab():
     # TODO: should not give an exception and the asserts should point to respective stable ids of these tokens
