@@ -20,3 +20,8 @@ Thesis Jan-Christoph
 
 - Classification over the challenge sets of the "Embarassingly simple paper" (possibly Jan Cramer)
 - SmallNLP Benchmark (possibly Jan Cramer)
+
+### Exporting Python path
+in order to solve importing of parent modules with respective path to the repo
+
+`export PYTHONPATH="/home/gianluca/Documents/hiwi/thesis-morphemepiece-port"`
