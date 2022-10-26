@@ -33,9 +33,9 @@ def test_tokenizer():
     expected = ['it', 'is', 'total', '##ly', 'normal', 'to', 'be', 'in##', 'distinguish', '##able']
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
-    sentence = "let's test some compounds and puntuation here in this fine-grained testcase!?"
-    expected = ['let', "##'", '##s', 'test', 'some', 'compound', '##s', 'and', 'punt', '##ua', '##tion', 'here', 'in',
-                'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case', '!', '?']
+    sentence = "let's test some compounds and punctuation here in this fine-grained testcase!?"
+    expected = ['let', "'", 's', 'test', 'some', 'compound', '##s', 'and', 'punctuate', '##ion', 'here',
+                 'in', 'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case', '!', '?']
     assert tokenizer.tokenize(sentence, vocab, lookup) == expected
 
 def test_tokenize_irregular_plural():
@@ -91,12 +91,11 @@ def test_empty_string():
                          lookup=lookup) == expected
 
 def test_special_tokens_from_vocab():
-    # TODO: should not give an exception and the asserts should point to respective stable ids of these tokens
 
-    assert tokenizer.sep_token_id == -1
-    assert tokenizer.mask_token_id == -1
-    assert tokenizer.pad_token_id == -1
-    assert tokenizer.cls_token_id == -1
+    assert tokenizer.sep_token_id == 4
+    assert tokenizer.mask_token_id == 5
+    assert tokenizer.pad_token_id == 1
+    assert tokenizer.cls_token_id == 3
 
 
 def test_relation_between_tokens_and_ids():

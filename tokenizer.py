@@ -4,20 +4,39 @@ from vocab import Vocab
 from transformers import PreTrainedTokenizer, BatchEncoding
 from transformers.utils import PaddingStrategy, TensorType
 from transformers.tokenization_utils_base import TruncationStrategy
+from transformers import BasicTokenizer
+import pandas as pd
+
 
 
 class MorphemepieceTokenizer(PreTrainedTokenizer):
-    vocab_files_names: Dict[str, str]
+    vocab_files_names: Dict[str, str] = {"morphemepiece_vocab": "./data/vocabulary.csv",
+                                        "suffixes":"./data/suffixes.csv",
+                                        "prefixes":"./data/prefixes.csv",
+                                        "words": "./data/words.csv",
+                                        "lookup": "./data/lookup.csv"}
     pretrained_vocab_files_map: Dict[str, Dict[str, str]]
     max_model_input_sizes: Dict[str, Optional[int]]
     pretrained_init_configuration: Dict[str, Dict[str, Any]]
     model_input_names: List[str]
     padding_side: str
     truncation_side: str
+    
+    def _prepare_vocab(self):
+        vocabulary = pd.read_csv(self.vocab_files_names["morphemepiece_vocab"])["x"].to_list()
+        prefixes = pd.read_csv(self.vocab_files_names["prefixes"])["x"].to_list()
+        words = pd.read_csv(self.vocab_files_names["words"])["x"].to_list()
+        suffixes = pd.read_csv(self.vocab_files_names["suffixes"])["x"].to_list()
+        vocab_split = {'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
+        vocab = Vocab(vocabulary, vocab_split, True)
+        return vocab
+
+    def _prepare_lookup(self):
+        return pd.read_csv(self.vocab_files_names["lookup"]).set_index("y").to_dict()["x"]
 
     def __init__(self,
-                 vocab: Vocab,
-                 lookup: Dict[str, List[str]],
+                 vocab: Vocab = None,
+                 lookup: Dict[str, List[str]]=None,
                  do_lower_case=True,
                  do_basic_tokenize=True,
                  never_split=None,
@@ -42,9 +61,13 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
             tokenize_chinese_chars=tokenize_chinese_chars,
             strip_accents=strip_accents,
             **kwargs)
-
+        if vocab is None: 
+            vocab=self._prepare_vocab()
+        if lookup is None:
+            lookup=self._prepare_lookup()
         self.vocab = vocab
         self.lookup = lookup
+       
 
     """
     def __call__(self,
@@ -171,7 +194,6 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
                                            unk_token=unk_token, max_chars=max_chars)
         backwards_list = self.tokenize_word(word, vocab_split=vocab_split, dir=-1, allow_compounds=allow_compounds,
                                             unk_token=unk_token, max_chars=max_chars)
-
         len_forward = len([token for token in forwards_list if token != "##"])
         len_backward = len([token for token in backwards_list if token != "##"])
         if len_backward < len_forward and len_backward > 1:
@@ -195,7 +217,6 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
             token_list = breakdown.split(" ")
         else:
             token_list = self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
-
         return token_list
 
     def __space_tokenizer(self, words: str):
@@ -203,17 +224,19 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
 
     def tokenize(self, text: str, vocab: Vocab, lookup, unk_token="[UNK]", max_chars=100):
         is_cased = vocab.is_cased
+        #if is_cased:
+        #    text = text.lower()
 
-        if is_cased:
-            text = text.lower()
-
-        word_list = self.__space_tokenizer(text)
-
+        #word_list = self.__space_tokenizer(text)
+        basic_tokenizer= BasicTokenizer(never_split=[self.unk_token, self.sep_token, self.pad_token, self.cls_token,self.mask_token])
+        word_list=basic_tokenizer.tokenize(text)
         tokens = [self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
         # flatten the list
+        if tokens == [] or isinstance(tokens[0], str):
+            return tokens
         return [token for tokens_word in tokens for token in tokens_word]
 
-    # preparation for huggingface
+    # methods for huggingface
 
     def get_added_vocab(self):
         vocab_dic = {}
@@ -225,7 +248,9 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
     def _convert_token_to_id(self, token: str):
         return self.vocab.vocabulary.index(token) + 1
 
-    def convert_tokens_to_ids(self, tokens: list):
+    def convert_tokens_to_ids(self, tokens):
+        if isinstance(tokens, str):
+            return self._convert_token_to_id(tokens)
         return [self._convert_token_to_id(token) for token in tokens]
 
     def _convert_id_to_token(self, id):

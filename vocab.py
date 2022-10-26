@@ -2,6 +2,7 @@ from typing import List
 
 
 class Vocab(object):
+    
 
     def __init__(self, vocabulary: list, vocab_split, is_cased: bool) -> None:
         self.vocabulary = vocabulary
