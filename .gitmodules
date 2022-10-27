@@ -1,0 +1,3 @@
+[submodule "flota"]
+	path = flota
+	url = git@github.com:GianlucaZimmer/flota.git
