@@ -18,8 +18,13 @@ def get_morpheme_tokens(morphemes, ignore_grouping):
             morpheme_types.append("(")
             idx += 1
             char = morphemes[idx]
-            while char != "}":
-                if char != "<" and char != ">" and char != "(" and char != ")":
+            count = 0
+            while char != "}" or count != 0:
+                if char == "}":
+                    count -= 1
+                elif char == "{":
+                    count += 1
+                elif char != "<" and char != ">" and char != "(" and char != ")":
                     morpheme += char
                 idx += 1
                 char = morphemes[idx]
@@ -41,5 +46,5 @@ def get_morpheme_tokens(morphemes, ignore_grouping):
         else:
             print("error with the following morpheme")
             print(morphemes)
-            idx += 1
+            break
     return morpheme_tokens, morpheme_types
