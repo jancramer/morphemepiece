@@ -10,6 +10,46 @@ import pandas as pd
 
 
 class MorphemepieceTokenizer(PreTrainedTokenizer):
+    r"""
+        Construct a subword tokenizer, that obtains morphemes.
+
+        This tokenizer inherits from [`PreTrainedTokenizer`] which contains most of the main methods. Users should refer to
+        this superclass for more information regarding those methods.
+
+        This tokenizer is the ported version from the R package morphemepiece https://github.com/macmillancontentscience/morphemepiece
+
+        Args:
+            vocab (`Vocab`, *optional*, defaults to `morphemepiece_vocabulary` from R):
+                Vocab object with the vocabulary.
+            lookup (`Dict[str, List[str]]`, *optional*, defaults to 'morphemepiece_lookup' from R):
+                Lookup for the tokenization process.
+            do_lower_case (`bool`, *optional*, defaults to `True`):
+                Whether or not to lowercase the input when tokenizing.
+            do_basic_tokenize (`bool`, *optional*, defaults to `True`):
+                Whether or not to do basic tokenization before WordPiece.
+            never_split (`Iterable`, *optional*):
+                Collection of tokens which will never be split during tokenization. Only has an effect when
+                `do_basic_tokenize=True`
+            unk_token (`str`, *optional*, defaults to `"[UNK]"`):
+                The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
+                token instead.
+            sep_token (`str`, *optional*, defaults to `"[SEP]"`):
+                The separator token, which is used when building a sequence from multiple sequences, e.g. two sequences for
+                sequence classification or for a text and a question for question answering. It is also used as the last
+                token of a sequence built with special tokens.
+            pad_token (`str`, *optional*, defaults to `"[PAD]"`):
+                The token used for padding, for example when batching sequences of different lengths.
+            cls_token (`str`, *optional*, defaults to `"[CLS]"`):
+                The classifier token which is used when doing sequence classification (classification of the whole sequence
+                instead of per-token classification). It is the first token of the sequence when built with special tokens.
+            mask_token (`str`, *optional*, defaults to `"[MASK]"`):
+                The token used for masking values. This is the token used when training this model with masked language
+                modeling. This is the token which the model will try to predict.
+            tokenize_chinese_chars (`bool`, *optional*, defaults to `True`):
+                Whether or not to tokenize Chinese characters.
+            
+
+    """
     vocab_files_names: Dict[str, str] = {"morphemepiece_vocab": "./data/vocabulary.csv",
                                         "suffixes":"./data/suffixes.csv",
                                         "prefixes":"./data/prefixes.csv",
@@ -22,7 +62,8 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
     padding_side: str
     truncation_side: str
     
-    def _prepare_vocab(self):
+    def _prepare_vocab(self)->Vocab:
+        """load and prepare vocabulary from morphemepiece_vocab"""
         vocabulary = pd.read_csv(self.vocab_files_names["morphemepiece_vocab"])["x"].to_list()
         prefixes = pd.read_csv(self.vocab_files_names["prefixes"])["x"].to_list()
         words = pd.read_csv(self.vocab_files_names["words"])["x"].to_list()
@@ -31,7 +72,8 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         vocab = Vocab(vocabulary, vocab_split, True)
         return vocab
 
-    def _prepare_lookup(self):
+    def _prepare_lookup(self)-> Dict[str,str]:
+        """load and prepare lookup from morphemepiece_vocab"""
         return pd.read_csv(self.vocab_files_names["lookup"]).set_index("y").to_dict()["x"]
 
     def __init__(self,
@@ -45,7 +87,7 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
                  pad_token="[PAD]",
                  cls_token="[CLS]",
                  mask_token="[MASK]",
-                 tokenize_chinese_chars=True,
+                 tokenize_chinese_chars=False,
                  strip_accents=None,
                  **kwargs):
 
@@ -69,35 +111,33 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         self.lookup = lookup
        
 
-    """
-    def __call__(self,
-                text: Union[str, List[str], List[List[str]]],
-                text_pair: Optional[Union[str, List[str], List[List[str]]]] = None, 
-                add_special_tokens: bool = True, 
-                padding: Union[bool, str, PaddingStrategy] = False, 
-                truncation: Union[bool, str, TruncationStrategy] = False, 
-                max_length: Optional[int] = None, stride: int = 0, 
-                is_split_into_words: bool = False, 
-                pad_to_multiple_of: Optional[int] = None, 
-                return_tensors: Optional[Union[str, TensorType]] = None, 
-                return_token_type_ids: Optional[bool] = None,
-                return_attention_mask: Optional[bool] = None,
-                return_overflowing_tokens: bool = False, 
-                return_special_tokens_mask: bool = False, 
-                return_offsets_mapping: bool = False, 
-                return_length: bool = False, 
-                verbose: bool = True, **kwargs) -> BatchEncoding:
-        input_ids=self.encode(text)
-        token_type_ids=[]
-        attention_mask=[]
-        overflowing_tokens=[]
-        data={'input_ids': input_ids,'token_type_ids': token_type_ids, 'attention_mask': attention_mask}
-        return BatchEncoding(data=data)
-    """
 
-    def tokenize_word(self, word: str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=100):
+    def tokenize_word(self, word: str, vocab_split, dir=1, allow_compounds=True, unk_token="[UNK]", max_chars=100) -> List[str]:
+        """Tokenize a single word based on morphemepiece tokenization,
+            
+            Applies a set of rules to determine the order of the morphemes
+
+            Args:
+                word(`str`):
+                    Word that should be tokenized.
+                vocab_split(`Dict[str, List[str]]`):
+                    Dictionary that consists of lists with prefixes, suffixes and words.
+                dir(`int`, *optional*, defaults to `1`):
+                    Reading direction: `1` = forwards,  `-1`= backwards.
+                allow_compounds(`bool`, *optional*, defaults to `True`):
+                    Whether or not allow compounds in the tokenization process.
+                unk_token(`str`, *optional*, defaults to `"[UNK]"`):
+                    The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
+                    token instead.  
+                max_chars(`int`, *optional*, defaults to `100`):
+                    The maximum length of a word, that can be tokenized. Returns `"[UNK]"` if the word is too long.
+            Returns: 
+                `List[str]`: 
+                    List of tokens of the word
+
+        """
         if len(word) > max_chars:
-            return unk_token
+            return [unk_token]
         frag_pat = "##"
         # load vocabulary
         prefixes = vocab_split['prefixes']
@@ -184,11 +224,31 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
                 keep_going = end >= 1
 
         if is_bad:
-            return unk_token
+            return [unk_token]
 
         return sub_tokens
 
-    def tokenize_word_bidirectional(self, word: str, vocab_split, unk_token, max_chars, allow_compounds=True):
+    def tokenize_word_bidirectional(self, word: str, vocab_split, unk_token, max_chars, allow_compounds=True) -> List[str]:
+        """Tokenize a single word bidirectional.
+            Select the direction with the fewest tokens.
+
+            Args:
+                word(`str`):
+                    Word that should be tokenized.
+                vocab_split(`Dict[str, List[str]]`):
+                    Dictionary that consists of lists with prefixes, suffixes and words.
+                unk_token(`str`):
+                    The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
+                    token instead.  
+                max_chars(`int`):
+                    The maximum length of a word, that can be tokenized. 
+                allow_compounds(`bool`, *optional*, defaults to `True`):
+                    Whether or not allow compounds in the tokenization process.
+            Returns: 
+                `List[str]`: 
+                    List of tokens of the word
+
+        """
 
         forwards_list = self.tokenize_word(word, vocab_split=vocab_split, dir=1, allow_compounds=allow_compounds,
                                            unk_token=unk_token, max_chars=max_chars)
@@ -201,7 +261,29 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         else:
             return forwards_list
 
-    def tokenize_word_lookup(self, word: str, vocab: Vocab, lookup: dict, unk_token, max_chars):
+    def tokenize_word_lookup(self, word: str, vocab: Vocab, lookup: dict, unk_token, max_chars, allow_compounds=True) -> List[str]:
+        """Tokenize a single using the lookup, if possible. 
+            Otherwise use bidirectional tokenization.
+
+            Args:
+                word(`str`):
+                    Word that should be tokenized.
+                vocab(`Vocab`):
+                    Vocab object, that consists of the vocabulary and the splitted vocabulary
+                lookup('Dict[str, List[str]]'):
+                    A dictionary that catches all specified special cases.
+                unk_token(`str`):
+                    The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
+                    token instead.  
+                max_chars(`int`):
+                    The maximum length of a word, that can be tokenized. 
+                allow_compounds(`bool`, *optional*, defaults to `True`):
+                    Whether or not allow compounds in the tokenization process.
+            Returns: 
+                `List[str]`: 
+                    List of tokens of the word
+
+        """
         vocab_split = vocab.vocab_split
         # check if it is in raw vocabulary
         vocabulary = vocab.vocabulary
@@ -216,13 +298,37 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
             breakdown: str = lookup[word]
             token_list = breakdown.split(" ")
         else:
-            token_list = self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
+            token_list = self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars, allow_compounds)
         return token_list
 
     def __space_tokenizer(self, words: str):
         return re.findall(r"[\w']+|[.,!?;-]", words)
 
-    def tokenize(self, text: str, vocab: Vocab, lookup, unk_token="[UNK]", max_chars=100):
+    def tokenize(self, text: str, vocab: Vocab, lookup, unk_token="[UNK]", max_chars=100) -> List[str]:
+        """Default tokenization function. 
+
+            Uses a basic tokenizer to split the text at whitespaces and punctuation. 
+            Then performs the original morphemepiece algorithm to tokenize these words.
+
+            Args:
+                text(`str`):
+                    Text that should be tokenized.
+                vocab(`Vocab`):
+                    Vocab object, that consists of the vocabulary and the splitted vocabulary
+                lookup('Dict[str, List[str]]'):
+                    A dictionary that catches all specified special cases.
+                unk_token(`str`):
+                    The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
+                    token instead.  
+                max_chars(`int`):
+                    The maximum length of a word, that can be tokenized. 
+                allow_compounds(`bool`, *optional*, defaults to `True`):
+                    Whether or not allow compounds in the tokenization process.
+            Returns: 
+                `List[str]`: 
+                    List of tokens of the word
+
+        """
         is_cased = vocab.is_cased
         #if is_cased:
         #    text = text.lower()
@@ -239,6 +345,11 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
     # methods for huggingface
 
     def get_added_vocab(self):
+        """ Returns the vocabulary of the `Vocab` object from this object
+            Returns: 
+                `Dict[str, int]`: 
+                    Dictionary of vocabularies with their correspondig ids.
+        """
         vocab_dic = {}
         vocab_tmp = self.vocab.vocabulary
         for i in range(len(vocab_tmp)):
@@ -246,20 +357,48 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         return vocab_dic
 
     def _convert_token_to_id(self, token: str):
+        """ Returns the ID to a token"""
         return self.vocab.vocabulary.index(token) + 1
 
     def convert_tokens_to_ids(self, tokens):
+        """Returns all IDs to the provided tokens.
+            Args:
+                tokens(`List[str]`):
+                    All tokens from from which the ID should be returned.
+            Returns:
+                `List[int]`:
+                    List with all corresponding IDs from the tokens.
+        """
         if isinstance(tokens, str):
             return self._convert_token_to_id(tokens)
         return [self._convert_token_to_id(token) for token in tokens]
 
     def _convert_id_to_token(self, id):
+        """ Returns the token to an ID"""
         return self.vocab.vocabulary[id - 1]
 
     def convert_ids_to_tokens(self, ids: list):
+        """Returns all tokens to the provided IDs.
+            Args:
+                ids(`List[int]`):
+                    All IDs from from which the token should be returned.
+            Returns:
+                `List[str]`:
+                    List with all corresponding tokens from the IDs.
+        """
         return [self._convert_id_to_token(id) for id in ids]
 
-    def convert_tokens_to_string(self, tokens: list):
+    def convert_tokens_to_string(self, tokens: list)-> str:
+        """Reconcatenates all tokens to a continuous text.
+
+            Problems with irregular tokenization catched by the lookup.
+            Args:
+                tokens(`List[str]`):
+                    Tokens extracted by the tokenization process of this class.
+            Returns:
+                `str`:
+                    Concatenated string of all tokens.
+        """
         concatenat_compounds = tokens
         for token in concatenat_compounds:
             if token == '##':
@@ -271,7 +410,15 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         out_string = " ".join(concatenat_compounds).replace(" ##", "").replace("## ", "").strip()
         return out_string
 
-    def decode(self, ids: list):
+    def decode(self, ids: list) -> str:
+        """ Constructs encoded list of IDs to a continous text.
+            Args:
+                ids(`List[int]`):
+                    IDs extracted by the encode functionality of this class.
+            Returns: 
+                `str`:
+                    Concatenated string of all IDs.
+        """
         return self.convert_tokens_to_string(self.convert_ids_to_tokens(ids))
 
     def batch_decode(self, sequences: Union[List[int], List[List[int]], "np.ndarray", "torch.Tensor", "tf.Tensor"],
@@ -280,5 +427,15 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         return [self.decode(sentence) for sentence in sequences]
 
     def encode(self, text: str):
+        """ 
+            Encodes a given text. 
+
+            Args: 
+                text(`str`): 
+                    Text, that should be encoded. 
+            Returns: 
+                `List[int]`:
+                    Corresponding IDs to the tokens of the input text. 
+        """
         tokens = self.tokenize(text, self.vocab, self.lookup)
         return self.convert_tokens_to_ids(tokens)

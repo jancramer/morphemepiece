@@ -2,6 +2,23 @@
 
 Thesis Jan-Christoph
 
+# Usage
+- Basic implementation of the morphemepiece-tokenizer in Python from the R package morphemepiece https://github.com/macmillancontentscience/morphemepiece
+    - use `from tokenizer import MorphemepieceTokenizer` to import the tokenizer into your project
+    - to tokenizer create a `MorphemepieceTokenizer` object
+        - call the tokenize function oft these objext with your text, tokenizer.vocab and tokenizer.lookup for the default data 
+    - default data:
+        - provided by the R package https://github.com/macmillancontentscience/morphemepiece.data 
+        - this data for the default tokenization is stored in the `data` folder
+        - these data is extracted from the R package 
+    - if you want to use a custom vocabulary use the the class `vocab.py`
+        - otherwise the standard vocabulary is used
+    - in `test.py` are some test cases implemented, that test the functionality of this project
+    - in `test_degug.py` are some examples of the usage implemented
+    
+    
+
+
 # Evaluation Ideas
 
 - The morphological measures from "Embarassingly simple paper" (Gianluca is implementing them)

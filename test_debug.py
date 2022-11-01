@@ -18,10 +18,11 @@ tokenizer = MorphemepieceTokenizer()
 #tokenizer_bert=BertTokenizer.from_pretrained("bert-base-cased")
 test_string = "let's test some compounds and punctuation here in this fine-grained testcase!?"
 empty=""
-tokenized_string = tokenizer.tokenize(empty, vocab=vocab, lookup=lookup, unk_token="[UNK]")
+tokenized_string = tokenizer.tokenize(test_string, vocab=tokenizer.vocab, lookup=tokenizer.lookup)
 #print(tokenizer(empty, truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab,
  #                        lookup=lookup))
-print(tokenizer.unk_token_id)
+print(tokenizer.encode(test_string,tokenizer.vocab,lookup=tokenizer.lookup))
+print(tokenized_string)
 #ids = []
 #for i in range(len(tokenized_string)):
 #    ids.append(tokenizer._convert_token_to_id(tokenized_string[i]))
