@@ -1,0 +1,5 @@
+ELP_ItemID,Word,POS,Nmorph,PRS_signature,MorphoLexSegm,PREF1_PFMF,PREF1_FamSize,PREF1_Freq_HAL,PREF1_length,PREF1_P,PREF1_P*,ROOT1_PFMF,ROOT1_FamSize,ROOT1_Freq_HAL,ROOT2_PFMF,ROOT2_FamSize,ROOT2_Freq_HAL,ROOT3_PFMF,ROOT3_FamSize,ROOT3_Freq_HAL
+28229,electroencephalogram,NN,4,"1,3,0",(electro){<en<(cephalo)(gram)},"88,23529412",18,5624,7,"85,71428571",148,331620,2,"2,11E-05",75,5,241,"95,23809524",22,8957
+28230,electroencephalograms,NN,4,"1,3,0",(electro){<en<(cephalo)(gram)},"88,23529412",18,5624,7,"85,71428571",148,331620,2,"2,11E-05",75,5,241,"95,23809524",22,8957
+28231,electroencephalographs,NN,4,"1,3,0",(electro){<en<(cephalo)(graph)},"76,47058824",18,5624,7,"80,27210884",148,331620,2,"2,11E-05",50,5,241,"75,65217391",116,198105
+28234,electroencephalograph,NN,4,"1,3,0",(electro){<en<(cephalo)(graph)},"76,47058824",18,5624,7,"80,27210884",148,331620,2,"2,11E-05",50,5,241,"75,65217391",116,198105
