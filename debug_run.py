@@ -1,3 +1,6 @@
+import os
+import time
+from glob import glob
 from sys import prefix
 from tokenizer import MorphemepieceTokenizer
 from transformers import BertTokenizer
@@ -13,15 +16,29 @@ suffixes = pd.read_csv("./data/suffixes.csv")["x"].to_list()
 vocab_split = {'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab = Vocab(vocabulary, vocab_split, True)
 
+
+
+
 # Erstellen des Tokenizers
-tokenizer = MorphemepieceTokenizer()
-#tokenizer_bert=BertTokenizer.from_pretrained("bert-base-cased")
+morpheme = MorphemepieceTokenizer()
+#morpheme=BertTokenizer.from_pretrained("bert-base-cased")
 test_string = "let's test some compounds and punctuation here in this fine-grained testcase!?"
 empty=""
-tokenized_string = tokenizer.tokenize(empty, vocab=vocab, lookup=lookup, unk_token="[UNK]")
+
+files = glob(os.path.join( "flota", "data", "*_train.csv"))
+df = pd.concat([pd.read_csv(f) for f in files])
+print(df['text'])
+t = time.process_time()
+
+df['morphemepiece'] = df['text'].map(
+    lambda x: morpheme.tokenize(x))
+
+print(time.process_time()-t)
+#print(df['morphemepiece'])
+#tokenized_string = tokenizer.tokenize(empty, vocab=vocab, lookup=lookup, unk_token="[UNK]")
 #print(tokenizer(empty, truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab,
  #                        lookup=lookup))
-print(tokenizer.unk_token_id)
+#print(tokenizer.unk_token_id)
 #ids = []
 #for i in range(len(tokenized_string)):
 #    ids.append(tokenizer._convert_token_to_id(tokenized_string[i]))
