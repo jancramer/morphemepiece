@@ -1,3 +1,6 @@
+import os
+import time
+from glob import glob
 from sys import prefix
 from tokenizer import MorphemepieceTokenizer
 from transformers import BertTokenizer
@@ -13,9 +16,12 @@ suffixes = pd.read_csv("./data/suffixes.csv")["x"].to_list()
 vocab_split = {'prefixes': prefixes, 'words': words, 'suffixes': suffixes}
 vocab = Vocab(vocabulary, vocab_split, True)
 
+
+
+
 # Erstellen des Tokenizers
-tokenizer = MorphemepieceTokenizer()
-#tokenizer_bert=BertTokenizer.from_pretrained("bert-base-cased")
+morpheme = MorphemepieceTokenizer()
+#morpheme=BertTokenizer.from_pretrained("bert-base-cased")
 test_string = "let's test some compounds and punctuation here in this fine-grained testcase!?"
 empty=""
 tokenized_string = tokenizer.tokenize(test_string, vocab=tokenizer.vocab, lookup=tokenizer.lookup)

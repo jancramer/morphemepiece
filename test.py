@@ -24,34 +24,34 @@ def test_call():
                                    'input_ids': [3034, 3118, 12515, 10862, 3056],
                                    'token_type_ids': [0, 0, 0, 0, 0],
                                    'attention_mask': [1, 1, 1, 1, 1]})
-    assert tokenizer.__call__(sentence, truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab,
-                              lookup=lookup) == expected
+    assert tokenizer.__call__(sentence, truncation=True, max_length=5, return_overflowing_tokens=True) == expected
 
 
 def test_tokenizer():
     sentence = "it is totally normal to be indistinguishable"
     expected = ['it', 'is', 'total', '##ly', 'normal', 'to', 'be', 'in##', 'distinguish', '##able']
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
     sentence = "let's test some compounds and punctuation here in this fine-grained testcase!?"
     expected = ['let', "'", 's', 'test', 'some', 'compound', '##s', 'and', 'punctuate', '##ion', 'here',
-                 'in', 'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case', '!', '?']
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+                'in', 'this', 'fine', '-', 'grain', '##ed', 'test', '##', 'case', '!', '?']
+    assert tokenizer.tokenize(sentence) == expected
+
 
 def test_tokenize_irregular_plural():
     sentence = "foxes"
     expected = ['fox', '##s']
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
     sentence = "running"
     expected = ['run', '##ing']
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
 
 def test_unknown_token():
     sentence = "longfakewordxzz"
     expected = ['[UNK]']
-    assert tokenizer.tokenize(sentence, vocab, lookup, max_chars=7) == expected
+    assert tokenizer.tokenize(sentence, max_chars=7) == expected
 
 
 def test_decode_irregular_plural():
@@ -59,16 +59,17 @@ def test_decode_irregular_plural():
     expected = "foxes"
     assert tokenizer.decode(tokens) == expected
 
+
 def test_compound():
     sentence = "chairball"
     expected = ['chair', '##', 'ball']
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
 
 def test_unarcher():
     sentence = "unarcher"
     expected = ["un##", "archer"]
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
 
 def test_special_tokens_in_sequence():
@@ -76,22 +77,21 @@ def test_special_tokens_in_sequence():
                 '[MASK]', 'inform', '##ation', '[PAD]', '[PAD]']
     sentence = f"{tokenizer.cls_token} hopefully this {tokenizer.mask_token} works as intended to get {tokenizer.mask_token} information {tokenizer.pad_token} {tokenizer.pad_token}"
 
-    assert tokenizer.tokenize(sentence, vocab, lookup) == expected
+    assert tokenizer.tokenize(sentence) == expected
 
 
 def test_empty_string():
     expected = BatchEncoding(data={'overflowing_tokens': [],
-                        'num_truncated_tokens': -5,
-                        'input_ids': [],
-                        'token_type_ids': [],
-                        'attention_mask': []})
+                                   'num_truncated_tokens': -5,
+                                   'input_ids': [],
+                                   'token_type_ids': [],
+                                   'attention_mask': []})
     sentence = ""
 
-    assert tokenizer(sentence, truncation=True, max_length=5, return_overflowing_tokens=True, vocab=vocab,
-                         lookup=lookup) == expected
+    assert tokenizer(sentence, truncation=True, max_length=5, return_overflowing_tokens=True) == expected
+
 
 def test_special_tokens_from_vocab():
-
     assert tokenizer.sep_token_id == 4
     assert tokenizer.mask_token_id == 5
     assert tokenizer.pad_token_id == 1
