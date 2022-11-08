@@ -109,6 +109,7 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
             lookup=self._prepare_lookup()
         self.vocab = vocab
         self.lookup = lookup
+        self.lookup_set = set(lookup.keys())
        
 
 
@@ -250,10 +251,11 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
 
         """
 
-        forwards_list = self.tokenize_word(word, vocab_split=vocab_split, dir=1, allow_compounds=allow_compounds,
-                                           unk_token=unk_token, max_chars=max_chars)
         backwards_list = self.tokenize_word(word, vocab_split=vocab_split, dir=-1, allow_compounds=allow_compounds,
                                             unk_token=unk_token, max_chars=max_chars)
+        forwards_list = self.tokenize_word(word, vocab_split=vocab_split, dir=1, allow_compounds=allow_compounds,
+                                           unk_token=unk_token, max_chars=max_chars)
+
         len_forward = len([token for token in forwards_list if token != "##"])
         len_backward = len([token for token in backwards_list if token != "##"])
         if len_backward < len_forward and len_backward > 1:
@@ -261,32 +263,27 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         else:
             return forwards_list
 
-    def tokenize_word_lookup(self, word: str, vocab: Vocab, lookup: dict, unk_token, max_chars, allow_compounds=True) -> List[str]:
+    
+    def tokenize_word_lookup(self, word: str, unk_token, max_chars):
         """Tokenize a single using the lookup, if possible. 
             Otherwise use bidirectional tokenization.
 
             Args:
                 word(`str`):
                     Word that should be tokenized.
-                vocab(`Vocab`):
-                    Vocab object, that consists of the vocabulary and the splitted vocabulary
-                lookup('Dict[str, List[str]]'):
-                    A dictionary that catches all specified special cases.
                 unk_token(`str`):
                     The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
                     token instead.  
                 max_chars(`int`):
                     The maximum length of a word, that can be tokenized. 
-                allow_compounds(`bool`, *optional*, defaults to `True`):
-                    Whether or not allow compounds in the tokenization process.
             Returns: 
                 `List[str]`: 
                     List of tokens of the word
 
         """
-        vocab_split = vocab.vocab_split
+        vocab_split = self.vocab.vocab_split
         # check if it is in raw vocabulary
-        vocabulary = vocab.vocabulary
+        vocabulary = self.vocab.vocabulary_set
 
         if word == "":
             return 0
@@ -294,17 +291,18 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
         if word in vocabulary:
             return [word]
         token_list: list
-        if word in lookup.keys():
-            breakdown: str = lookup[word]
+        if word in self.lookup_set:
+            breakdown: str = self.lookup[word]
             token_list = breakdown.split(" ")
         else:
-            token_list = self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars, allow_compounds)
+            token_list = self.tokenize_word_bidirectional(word, vocab_split, unk_token, max_chars)
         return token_list
 
     def __space_tokenizer(self, words: str):
         return re.findall(r"[\w']+|[.,!?;-]", words)
 
-    def tokenize(self, text: str, vocab: Vocab, lookup, unk_token="[UNK]", max_chars=100) -> List[str]:
+    
+    def tokenize(self, text: str,  unk_token="[UNK]", max_chars=100):
         """Default tokenization function. 
 
             Uses a basic tokenizer to split the text at whitespaces and punctuation. 
@@ -313,30 +311,24 @@ class MorphemepieceTokenizer(PreTrainedTokenizer):
             Args:
                 text(`str`):
                     Text that should be tokenized.
-                vocab(`Vocab`):
-                    Vocab object, that consists of the vocabulary and the splitted vocabulary
-                lookup('Dict[str, List[str]]'):
-                    A dictionary that catches all specified special cases.
                 unk_token(`str`):
                     The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
                     token instead.  
                 max_chars(`int`):
-                    The maximum length of a word, that can be tokenized. 
-                allow_compounds(`bool`, *optional*, defaults to `True`):
-                    Whether or not allow compounds in the tokenization process.
+                    The maximum length of a word, that can be tokenized.
             Returns: 
                 `List[str]`: 
                     List of tokens of the word
 
         """
-        is_cased = vocab.is_cased
+        is_cased = self.vocab.is_cased
         #if is_cased:
         #    text = text.lower()
 
         #word_list = self.__space_tokenizer(text)
         basic_tokenizer= BasicTokenizer(never_split=[self.unk_token, self.sep_token, self.pad_token, self.cls_token,self.mask_token])
         word_list=basic_tokenizer.tokenize(text)
-        tokens = [self.tokenize_word_lookup(word, vocab, lookup, unk_token, max_chars) for word in word_list]
+        tokens = [self.tokenize_word_lookup(word, unk_token, max_chars) for word in word_list]
         # flatten the list
         if tokens == [] or isinstance(tokens[0], str):
             return tokens
